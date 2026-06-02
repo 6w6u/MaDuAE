@@ -1,0 +1,14 @@
+h5py==3.13.0
+kneed==0.8.5
+leidenalg==0.10.2
+matplotlib==3.9.4
+networkx==3.2.1
+numpy==1.23.5
+pandas==2.0.3
+python_igraph==0.11.9
+python_louvain==0.16
+scanpy==1.10.3
+scikit_learn==1.6.1
+scipy==1.13.1
+torch==1.10.0+cu111
+tqdm==4.65.0
