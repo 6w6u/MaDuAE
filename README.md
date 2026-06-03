@@ -6,7 +6,7 @@ A three-tower dual-path autoencoder (MaDuAE) for scRNA-seq data imputation
 Our testing was completed in the recommended environment (requirements.txt). Please make sure to precisely adjust the package versions to match your GPU/CPU machine versions.
 ## Installation
 ```
-git clone https://github.com/6w6u/MaDuAE<br>
+git clone https://github.com/6w6u/MaDuAE
 cd MaDuAE
 ```
 ## Usage example
