@@ -5,8 +5,10 @@ A three-tower dual-path autoencoder (MaDuAE) for scRNA-seq data imputation
 ## Required configuration
 Our testing was completed in the recommended environment (requirements.txt). Please make sure to precisely adjust the package versions to match your GPU/CPU machine versions.
 ## Installation
-git clone https://github.com/6w6u/MaDuAE
+```
+git clone https://github.com/6w6u/MaDuAE<br>
 cd MaDuAE
+```
 ## Usage example
 ###
 In most cases, it is sufficient to use it directly under the default parameters. For cell trajectory inference tasks, we recommend reducing the concest_ceight and inter_tower_Simweighted values to 0.01.
