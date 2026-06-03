@@ -36,6 +36,6 @@ random_state (int):   Random seed, default 0
 ### Running demo
 The Clustering Example and the Rare Cell Recognition Example each provide usage examples for two datasets. For detailed instructions, please refer to the Instruction.txt file in the respective directories.
 ## Contact
-If any questions, you can contact us through the following ways：
+If any questions, you can contact us through the following ways:<br>
 Wentao Wu, 244711098@csu.edu.cn
 
