@@ -11,6 +11,7 @@ cd MaDuAE
 ###
 In most cases, it is sufficient to use it directly under the default parameters. For cell trajectory inference tasks, we recommend reducing the concest_ceight and inter_tower_Simweighted values to 0.01.
 ### Specific arguments:
+```
 hidden_dim (int):   Autoencoder hidden dimension, default 32<br>
 num_epochs (int):   Maximum training epochs, default 300<br>
 learning_rate (float):   Learning rate, default 1e-3<br>
@@ -29,6 +30,7 @@ k_neighbors (int):   Final number of neighbors to keep, default 11, including se
 device (str):   Computing device, default 'cuda' (auto-detected)<br>
 verbose (bool):   Whether to print training logs, default True<br>
 random_state (int):   Random seed, default 0
+```
 ### Running demo
 The Clustering Example and the Rare Cell Recognition Example each provide usage examples for two datasets. For detailed instructions, please refer to the Instruction.txt file in the respective directories.
 ## Contact
