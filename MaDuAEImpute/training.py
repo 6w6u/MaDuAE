@@ -61,7 +61,7 @@ def train_triple_dual_path(
         consist_weight = [consist_weight] * 3
 
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5, verbose=False)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5)
 
     best_combined_loss = float('inf')
     best_valid_total = float('inf')

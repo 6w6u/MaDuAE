@@ -33,10 +33,10 @@ def impute_single_dual_path(model, dataset_row, dataset_col,
     n_cells = len(dataset_row)
     n_genes = len(dataset_col)
 
-    X_cell = np.zeros((n_cells, n_genes), dtype=np.float32)
-    X_gene = np.zeros((n_cells, n_genes), dtype=np.float32)
+    # Single output matrix, accumulated in-place to avoid holding X_cell and X_gene simultaneously
+    X_ens = np.zeros((n_cells, n_genes), dtype=np.float32)
 
-    # Cell path
+    # Cell path - accumulate directly into X_ens
     loader_row = DataLoader(dataset_row, batch_size=batch_size, shuffle=False)
     for batch_idx, (data_row, _, _, _) in enumerate(loader_row):
         data_row = data_row.to(device)
@@ -44,19 +44,19 @@ def impute_single_dual_path(model, dataset_row, dataset_col,
         end = min(start + batch_size, n_cells)
         with torch.no_grad():
             avg_recon, _ = model.cell_ae(data_row)
-            X_cell[start:end] = avg_recon.detach().cpu().numpy()
+            X_ens[start:end] = alpha * avg_recon.detach().cpu().numpy()
+        del data_row, avg_recon
 
-    # Gene path
+    # Gene path - accumulate directly into X_ens
     loader_col = DataLoader(dataset_col, batch_size=batch_size, shuffle=False)
     for _, (data_col, _, _, col_idx) in enumerate(loader_col):
         data_col = data_col.to(device)
         col_idx_np = col_idx.cpu().numpy()
         with torch.no_grad():
             avg_recon_T, _ = model.gene_ae(data_col)
-            X_gene[:, col_idx_np] = avg_recon_T.detach().cpu().T.numpy()
+            X_ens[:, col_idx_np] += (1 - alpha) * avg_recon_T.detach().cpu().T.numpy()
+        del data_col, avg_recon_T, col_idx, col_idx_np
 
-    # Weighted fusion
-    X_ens = alpha * X_cell + (1 - alpha) * X_gene
     np.clip(X_ens, 0, None, out=X_ens)
     return X_ens
 
@@ -84,10 +84,10 @@ def impute_triple_dual_path(model, dataset_row, dataset_col,
     n_cells = len(dataset_row)
     n_genes = len(dataset_col)
 
-    X_cell = np.zeros((n_cells, n_genes), dtype=np.float32)
-    X_gene = np.zeros((n_cells, n_genes), dtype=np.float32)
+    # Single output matrix, accumulated in-place to avoid holding X_cell and X_gene simultaneously
+    X_ens = np.zeros((n_cells, n_genes), dtype=np.float32)
 
-    # Cell path (average of three towers)
+    # Cell path (average of three towers) - accumulate directly into X_ens
     loader_row = DataLoader(dataset_row, batch_size=batch_size, shuffle=False)
     for batch_idx, (data_row, _, _, _) in enumerate(loader_row):
         data_row = data_row.to(device)
@@ -95,20 +95,22 @@ def impute_triple_dual_path(model, dataset_row, dataset_col,
         end = min(start + batch_size, n_cells)
         with torch.no_grad():
             recons = [tower.cell_ae(data_row)[0] for tower in model.towers]
-            avg_recon = torch.stack(recons).mean(dim=0)
-            X_cell[start:end] = avg_recon.detach().cpu().numpy()
+            # Average three towers without torch.stack to save memory
+            avg_recon = sum(recons) / 3.0
+            X_ens[start:end] = alpha * avg_recon.detach().cpu().numpy()
+        del data_row, avg_recon, recons
 
-    # Gene path (three towers share the same GeneAE)
+    # Gene path (three towers share the same GeneAE) - accumulate directly into X_ens
     loader_col = DataLoader(dataset_col, batch_size=batch_size, shuffle=False)
     for _, (data_col, _, _, col_idx) in enumerate(loader_col):
         data_col = data_col.to(device)
         col_idx_np = col_idx.cpu().numpy()
         with torch.no_grad():
             recons_T = [tower.gene_ae(data_col)[0] for tower in model.towers]
-            avg_recon_T = torch.stack(recons_T).mean(dim=0)
-            X_gene[:, col_idx_np] = avg_recon_T.detach().cpu().T.numpy()
+            # Average three towers without torch.stack to save memory
+            avg_recon_T = sum(recons_T) / 3.0
+            X_ens[:, col_idx_np] += (1 - alpha) * avg_recon_T.detach().cpu().T.numpy()
+        del data_col, avg_recon_T, recons_T, col_idx, col_idx_np
 
-    # Weighted fusion
-    X_ens = alpha * X_cell + (1 - alpha) * X_gene
     np.clip(X_ens, 0, None, out=X_ens)
     return X_ens

@@ -38,26 +38,27 @@ def _consensus_from_clusters(all_clusters: np.ndarray) -> np.ndarray:
     """Compute consensus labels from multiple clustering results"""
     num_objects = len(all_clusters[0])
 
-    # 构建共现相似度矩阵
-    similarity_matrix = np.zeros((num_objects, num_objects), dtype=int)
+    # Build co-occurrence matrix (float32 to avoid int64 memory blowup)
+    similarity_matrix = np.zeros((num_objects, num_objects), dtype=np.float32)
     for labels in all_clusters:
         labels = np.array(labels)
         bool_matrix = labels[:, None] == labels
         similarity_matrix += bool_matrix
         del bool_matrix
 
-    pairwise_probabilities = similarity_matrix / len(all_clusters)
-    np.fill_diagonal(pairwise_probabilities, 0)
-    pairwise_probabilities = np.array(pairwise_probabilities, dtype=np.float32, copy=False)
+    np.fill_diagonal(similarity_matrix, 0)
+    # Normalize in-place to avoid creating an extra copy
+    similarity_matrix /= len(all_clusters)
 
-    # 构建加权图并运行 Leiden
-    coo = sparse.coo_matrix(pairwise_probabilities)
+    # Build weighted graph and run Leiden
+    coo = sparse.coo_matrix(similarity_matrix)
+    del similarity_matrix
     coo_ut = sparse.triu(coo, k=1, format="coo")
     rows = coo_ut.row.astype(np.int32, copy=False)
     cols = coo_ut.col.astype(np.int32, copy=False)
     weights = coo_ut.data.astype(np.float32, copy=False)
 
-    del pairwise_probabilities, coo, coo_ut
+    del coo, coo_ut
 
     G = ig.Graph(n=num_objects, edges=zip(rows, cols), directed=False)
     G.es["weight"] = weights

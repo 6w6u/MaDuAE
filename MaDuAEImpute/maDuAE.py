@@ -220,10 +220,13 @@ class MaDuAEImputer:
             print("Generating Pearson labels...")
         start_time = time.time()
         corr_mat_pearson = np.corrcoef(adataX_copy)
-        distance_matrix_pearson = 1 - corr_mat_pearson
+        # Overwrite in-place: distance = 1 - corr, avoiding an extra n×n matrix copy
+        np.subtract(1, corr_mat_pearson, out=corr_mat_pearson)
         X_reduced_pearson = prcomp_irlba_rotation(
-            distance_matrix_pearson, n_components=pca_dim, center=True, scale=True
+            corr_mat_pearson, n_components=pca_dim, center=True, scale=True
         )
+        del corr_mat_pearson
+        gc.collect()
         adata_temp.obsm['X_pca'] = X_reduced_pearson
         labels_pearson = consensus_leiden_clustering_from_adata(
             adata_temp,
@@ -232,16 +235,22 @@ class MaDuAEImputer:
         )
         if self.verbose:
             print(f"Pearson labels generated, elapsed time: {time.time() - start_time:.2f}s")
+        # Free memory from Pearson consensus before starting Spearman
+        del X_reduced_pearson
+        gc.collect()
 
         # 3. Spearman labels - consensus Leiden clustering after Spearman correlation dimensionality reduction
         if self.verbose:
             print("Generating Spearman labels...")
         start_time = time.time()
         corr_mat_spearman = fast_spearman_corr(adataX_copy.T)
-        distance_matrix_spearman = 1 - corr_mat_spearman
+        # Overwrite in-place: distance = 1 - corr
+        np.subtract(1, corr_mat_spearman, out=corr_mat_spearman)
         X_reduced_spearman = prcomp_irlba_rotation(
-            distance_matrix_spearman, n_components=pca_dim, center=True, scale=True
+            corr_mat_spearman, n_components=pca_dim, center=True, scale=True
         )
+        del corr_mat_spearman
+        gc.collect()
         adata_temp.obsm['X_pca'] = X_reduced_spearman
         labels_spearman = consensus_leiden_clustering_from_adata(
             adata_temp,
