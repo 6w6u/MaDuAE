@@ -1,2 +1,2 @@
-The rare cell identification results of scCAD before and after imputation of Jurkat and Li data can be found in Jurkat_test.py and Li_test.py.
- If the imputation results are saved, you can also run RareQ_test. R to view the rare cell identification results of RareQ before and after imputation.
+The rare cell identification results of scCAD before and after imputation on Jurkat and Li data can be obtained by running Jurkat_test.py and Li_test.py.
+If the imputation results are saved, you can also run RareQ_test.R to view the rare cell identification results of RareQ before and after imputation.
