@@ -418,11 +418,13 @@ class MaDuAEImputer:
 
         return self
 
-    def transform(self, return_adata: bool = True) -> sc.AnnData:
+    def transform(self, return_adata: bool = True, use_predicted_mask: bool = False) -> sc.AnnData:
         """Perform imputation
 
         Args:
             return_adata: Whether to return AnnData object, default True
+            use_predicted_mask: If True, only impute positions predicted by mask
+                (neighbor expression rate filtering). If False (default), impute all original zero positions.
 
         Returns:
             If return_adata=True: AnnData object with imputation results saved in .X
@@ -436,7 +438,9 @@ class MaDuAEImputer:
             device=self.device, batch_size=256, #self.batch_size
             alpha=0.5
         )
-        imp_result = np.where(self.ori_mask_ == 1, X_ens, self._adataX_copy)
+        # Choose which mask controls which positions are replaced
+        imp_mask = self.mask_ if use_predicted_mask else self.ori_mask_
+        imp_result = np.where(imp_mask == 1, X_ens, self._adataX_copy)
 
         if self.verbose:
             print(f"Imputation completed! Result shape: {imp_result.shape}")
@@ -489,19 +493,22 @@ class MaDuAEImputer:
         return adata_imputed
 
     def fit_transform(self, adata: sc.AnnData,
-                      true_labels: np.ndarray = None, save_best_model: str = None) -> sc.AnnData:
+                      true_labels: np.ndarray = None, save_best_model: str = None,
+                      use_predicted_mask: bool = False) -> sc.AnnData:
         """Train model and perform imputation (one step)
 
         Args:
             adata: scanpy AnnData object (raw count matrix)
             true_labels: Optional, true label array, used to validate K-means clustering performance before and after imputation
             save_best_model: Optional, path to save model weights (.pth file)
+            use_predicted_mask: If True, only impute positions predicted by mask
+                (neighbor expression rate filtering). If False (default), impute all original zero positions.
 
         Returns:
             AnnData object with imputation results saved in .X
         """
         self.fit(adata, true_labels=true_labels, save_best_model=save_best_model)
-        return self.transform(return_adata=True)
+        return self.transform(return_adata=True, use_predicted_mask=use_predicted_mask)
 
     def save_model(self, path: str):
         """Save model weights
