@@ -1,7 +1,7 @@
 # MaDuAE
 ## Introduction
 A three-tower dual-path autoencoder (MaDuAE) for scRNA-seq data imputation
-![MaDuAE Algorithm Framework](https://github.com/6w6u/MaDuAE/blob/main/framework.pdf)
+![MaDuAE Algorithm Framework](https://github.com/6w6u/MaDuAE/blob/main/framework.png)
 ## Required configuration
 Our testing was completed in the recommended environment (requirements.txt). Please make sure to precisely adjust the package versions to match your GPU/CPU machine versions.
 ## Installation
